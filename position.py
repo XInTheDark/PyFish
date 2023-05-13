@@ -77,16 +77,23 @@ class Position:
     def game_ply(self):
         return self.board.ply()
     
-    def all_material(self, color=None):
+    def all_material(self, color=None, eg=False):
         if color is None:
-            return sum([piece_value(piece_type) * self.count(piece_type) for piece_type in chess.PIECE_TYPES])
-        return sum([piece_value(piece_type) * len(self.board.pieces(piece_type, color)) for piece_type in chess.PIECE_TYPES])
+            return sum([piece_value(piece_type,eg) * self.count(piece_type) for piece_type in chess.PIECE_TYPES])
+        return sum([piece_value(piece_type,eg) * len(self.board.pieces(piece_type, color))
+                    for piece_type in chess.PIECE_TYPES])
     
-    def non_pawn_material(self, color=None):
+    def non_pawn_material(self, color=None, eg=False):
         if color is None:
-            return sum([piece_value(piece_type) * self.count(piece_type) for piece_type in chess.PIECE_TYPES
-                        if piece_type != chess.PAWN])
-        return sum([piece_value(piece_type) * len(self.board.pieces(piece_type, color)) for piece_type in chess.PIECE_TYPES
-                    if piece_type != chess.PAWN])
+            return sum([piece_value(piece_type,eg) * self.count(piece_type)
+                        for piece_type in chess.PIECE_TYPES if piece_type != chess.PAWN])
+        return sum([piece_value(piece_type,eg) * len(self.board.pieces(piece_type, color))
+                    for piece_type in chess.PIECE_TYPES if piece_type != chess.PAWN])
+    
+    def is_endgame(self):
+        # TODO: Add better handling of this
+        # Meanwhile we are just using fixed thresholds.
+        return self.non_pawn_material(eg=True) < Value.EndgameLimit \
+            or self.count_all() - self.count(chess.PAWN) <= 5
     
     

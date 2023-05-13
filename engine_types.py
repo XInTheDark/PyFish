@@ -28,7 +28,7 @@ class Value:
     QueenValueEg = 2682
     
     MidgameLimit = 15258
-    EndgameLimit = 3915
+    EndgameLimit = 5365
     
     def __neg__(self):
         return Value(-self.value)
