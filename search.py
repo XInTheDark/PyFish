@@ -115,13 +115,14 @@ def search(pos: Position, nodeType: NodeType, ss: Stack,
         if cutNode:
             r += 2
             
-        if PvNode:
-            r -= 2
+        # if PvNode:
+        #     r -= 2
         
-        if m == ttMove:
+        elif m == ttMove:
             r -= 1
             
-        d = clamp(newDepth - r, 1, newDepth - 1)
+        # d = clamp(1, newDepth - r, newDepth + 1)
+        d = newDepth
         value = -search(pos, NodeType.NonPV, ss, -(alpha+1), -alpha, d, True)
         
         # Do full depth search when reduced LMR search fails high

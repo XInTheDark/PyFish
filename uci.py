@@ -30,13 +30,13 @@ def uci():
         elif command.startswith("position startpos moves"):
             moves = command.split("position startpos moves ")[1].split(" ")
             for move in moves:
-                pos.board.chess_board().push(uci_to_move(move))
+                pos.board.push(uci_to_move(move))
         elif command.startswith("position fen") and "moves" in command:
             fen = command.split(" ")[2]
             moves = command.split("moves ")[1].split(" ")
             pos = position.Position(fen)
             for move in moves:
-                pos.board.chess_board().push(uci_to_move(move))
+                pos.board.push(uci_to_move(move))
         elif command.startswith("position fen"):
             fen = command.split(" ")[2]
             pos = position.Position(fen)
