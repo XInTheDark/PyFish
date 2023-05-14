@@ -9,8 +9,6 @@ import zobrist
 import threads
 
 TTtable = tt.TranspositionTable(TT_SIZE)  # TODO: TT size to be added as UCI option
-                                            # Also TT sizes of >= 2^10 give overflow error:
-                                            # "IndexError: cannot fit 'int' into an index-sized integer"
 
 def futility_margin(depth: int):
     return Value(146 * depth)
@@ -311,7 +309,7 @@ def iterative_deepening(rootPos: Position, max_depth: int = MAX_PLY, max_time: i
         t = int((time.time() - starttime) * 1000)
 
         s = f"info depth {depth} seldepth {depth} multipv 1 value cp {value} nodes {nodes} nps {1000 * nodes // t if t else 0}" \
-            f" hashfull {TTtable.hashfull()} tbhits 0 time {t} pv {best_move}"
+            f" hashfull {int(TTtable.hashfull() * 1000)} tbhits 0 time {t} pv {best_move}"
 
         # special case: mate in x
         if value >= Value.VALUE_MATE:

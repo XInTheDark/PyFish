@@ -3,7 +3,7 @@ from enum import Enum, auto
 import chess
 
 MAX_PLY = 246
-TT_SIZE = 2**10
+TT_SIZE = 2**15
 
 class Value:
     def __init__(self, value: int):

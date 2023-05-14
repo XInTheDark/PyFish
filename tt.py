@@ -21,8 +21,11 @@ class TranspositionTable:
         self.table = [self.TTEntry() for i in range(self.size)]
         self.zobrist = zobrist.Zobrist()
         
-    def hashfull(self):
+    def hashfull_count(self):
         return sum([1 for entry in self.table if not entry.is_none()])
+    
+    def hashfull(self):
+        return self.hashfull_count() / self.size
     
     def hash(self, pos: Position):
         return self.zobrist.hash(pos) % self.size
