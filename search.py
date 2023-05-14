@@ -8,7 +8,7 @@ import evaluate
 import zobrist
 import threads
 
-TTtable = tt.TranspositionTable(TT_SIZE)  # TODO: TT size to be added as UCI option
+TTtable = None  # initialised in iterative_deepening()
 
 def futility_margin(depth: int):
     return Value(146 * depth)
@@ -125,7 +125,12 @@ def search(pos: Position, nodeType: NodeType, ss: Stack,
             
         # d = clamp(1, newDepth - r, newDepth + 1)
         d = newDepth
-        value = -search(pos, NodeType.NonPV, ss, -(alpha+1), -alpha, d, True)
+        if PvNode:
+            value = -search(pos, NodeType.PV, ss, -(alpha + 1), -alpha, d, False)
+            if alpha < value < beta:
+                value = -search(pos, NodeType.NonPV, ss, -beta, -alpha, d, True)
+        else:
+            value = -search(pos, NodeType.NonPV, ss, -beta, -alpha, d, False)
         
         # Do full depth search when reduced LMR search fails high
         if value > alpha and d < newDepth:
@@ -290,8 +295,9 @@ def qsearch(pos: Position, nodeType: NodeType, ss: Stack,
 def iterative_deepening(rootPos: Position, max_depth: int = MAX_PLY, max_time: int = None):
     """Called by UCI command. Starts the search."""
     import time
-    global nodes
+    global nodes, TTtable
     nodes = 0  # init
+    TTtable = tt.TranspositionTable(TT_SIZE)  # TODO: TT size to be added as UCI option
     
     starttime = time.time()
     if max_time:
