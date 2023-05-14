@@ -7,6 +7,7 @@ import tt
 import evaluate
 import zobrist
 import threads
+import time
 
 TTtable = None  # initialised in iterative_deepening()
 
@@ -16,13 +17,14 @@ def futility_margin(depth: int):
 
 best_move = None  # root move
 nodes = 0
+last_pv_timer = time.time()
 
 def search(pos: Position, nodeType: NodeType, ss: Stack,
            alpha: Value, beta: Value,
            depth: int, cutNode: bool):
     """Main search function. Value returned from side to move."""
     
-    global nodes
+    global nodes, last_pv_timer
     nodes += 1
     
     PvNode = nodeType == NodeType.PV or nodeType == NodeType.Root
@@ -94,9 +96,18 @@ def search(pos: Position, nodeType: NodeType, ss: Stack,
     
     # TODO: Null move search (after I figure the Stack implementation out)
     
-    for m in pos.board.legal_moves:
+    currMoveN = 0
+    LEGAL_MOVES = list(pos.board.legal_moves)
+    for m in LEGAL_MOVES:
         ss.moveCount += 1
+        if rootNode: currMoveN += 1
         extension = 0
+        
+        if rootNode and time.time() - last_pv_timer >= 3:
+            s = f"info depth {depth} currmove {m} currmovenumber {currMoveN} total {len(LEGAL_MOVES)}" \
+                f" nodes {nodes}"
+            print(s)
+            last_pv_timer = time.time()
         
         newDepth = depth - 1
         delta: Value = beta - alpha
@@ -295,7 +306,7 @@ def qsearch(pos: Position, nodeType: NodeType, ss: Stack,
 def iterative_deepening(rootPos: Position, max_depth: int = MAX_PLY, max_time: int = None):
     """Called by UCI command. Starts the search."""
     import time
-    global nodes, TTtable
+    global nodes, TTtable, last_pv_timer
     nodes = 0  # init
     TTtable = tt.TranspositionTable(TT_SIZE)  # TODO: TT size to be added as UCI option
     
@@ -324,3 +335,7 @@ def iterative_deepening(rootPos: Position, max_depth: int = MAX_PLY, max_time: i
             s = s.replace(f"cp {value}", f"mate -{abs(value) - Value.VALUE_MATE}")
             
         print(s)
+        
+        # update last_pv_timer
+        last_pv_timer = time.time()
+        
