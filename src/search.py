@@ -25,6 +25,7 @@ def search(pos: Position, nodeType: NodeType, ss: Stack,
     
     if nodes >= nodes_limit:
         threads.stop_search()
+        print(f"info nodes {nodes}")
         return Value.VALUE_ZERO
     
     PvNode = nodeType == NodeType.PV or nodeType == NodeType.Root
