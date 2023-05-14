@@ -6,7 +6,7 @@ from search_h import *
 import tt
 import evaluate
 import zobrist
-import thread
+import threads
 
 TTtable = tt.TranspositionTable(TT_SIZE)  # TODO: TT size to be added as UCI option
                                             # Also TT sizes of >= 2^10 give overflow error:
@@ -27,12 +27,12 @@ def search(pos: Position, nodeType: NodeType, ss: Stack,
     global nodes
     nodes += 1
     
-    PvNode = nodeType == NodeType.PV
+    PvNode = nodeType == NodeType.PV or nodeType == NodeType.Root
     rootNode = nodeType == NodeType.Root
     
     # quiescence search when the depth reaches zero
     if depth <= 0:
-        return qsearch(pos, nodeType, ss, alpha, beta, 0)
+        return qsearch(pos, NodeType.PV if PvNode else NodeType.NonPV, ss, alpha, beta, 0)
     
     assert MAX_PLY > depth > 0
     assert -Value.VALUE_INFINITE <= alpha < beta <= Value.VALUE_INFINITE
@@ -52,12 +52,12 @@ def search(pos: Position, nodeType: NodeType, ss: Stack,
     improving: bool = False; improvement = 0
     
     # Step 2. Check for aborted search
-    if thread.stopped():
+    if threads.stopped():
         return evaluate.evaluate(pos)
     
     # Check for checkmate and stalemate
     if pos.board.is_checkmate():
-        return -Value.VALUE_MATE + pos.game_ply()
+        return -(Value.VALUE_MATE + ss.ply)
     elif pos.board.is_stalemate():
         return Value.VALUE_DRAW
     
@@ -88,13 +88,13 @@ def search(pos: Position, nodeType: NodeType, ss: Stack,
     
     # Step 8. Futility pruning
     if not ttPv and depth > 9\
+        and eval_ is not None\
         and eval_ - futility_margin(depth) >= beta\
         and eval_ < Value(25003)\
         and not inCheck:
         return eval_
     
     # TODO: Null move search (after I figure the Stack implementation out)
-    # TODO: Add Step 11 (qsearch)
     
     for m in pos.board.legal_moves:
         ss.moveCount += 1
@@ -144,7 +144,7 @@ def search(pos: Position, nodeType: NodeType, ss: Stack,
         assert Value.VALUE_INFINITE > value > -Value.VALUE_INFINITE
         
         # Step 20. Check for a new best move
-        if thread.stopped():
+        if threads.stopped():
             return Value.VALUE_ZERO
         
         if rootNode and value > alpha:
@@ -163,12 +163,15 @@ def search(pos: Position, nodeType: NodeType, ss: Stack,
     
     # End of for loop
     # TODO: Step 21. Check for mate and stalemate (not needed?)
+    print(bestValue)
     return bestValue
 
 
 def qsearch(pos: Position, nodeType: NodeType, ss: Stack,
             alpha: Value, beta: Value, depth: int):
     """Quiescence search function, called from main search with depth <= 0."""
+    if depth <= -5:
+        return evaluate.evaluate(pos)
     
     global nodes
     nodes += 1
@@ -176,7 +179,7 @@ def qsearch(pos: Position, nodeType: NodeType, ss: Stack,
     assert nodeType != NodeType.Root
     assert depth <= 0
     
-    PvNode = nodeType == NodeType.PV
+    PvNode = nodeType == NodeType.PV or nodeType == NodeType.Root
     
     # Initialise
     bestMove = None
@@ -185,7 +188,7 @@ def qsearch(pos: Position, nodeType: NodeType, ss: Stack,
     us = pos.side_to_move()
     
     # Check for aborted search
-    if thread.stopped():
+    if threads.stopped():
         return evaluate.evaluate(pos)
     
     # Transposition table lookup
@@ -213,11 +216,14 @@ def qsearch(pos: Position, nodeType: NodeType, ss: Stack,
             # ttValue can be used as a better position evaluation
             if ttValue is not None and ttValue != Value.VALUE_NONE:
                 bestValue = ttValue
+        else:
+            ss.staticEval = bestValue = evaluate.evaluate(pos)
         
         if bestValue >= beta:
             # Save gathered info in transposition table
             if not ttHit:
-                TTtable.save(pos, hash_(pos), TTtable.TTEntry(hash_(pos), None, bestValue, ss.staticEval, None, False))
+                TTtable.save(pos, hash_(pos), TTtable.TTEntry(hash_(pos), None, bestValue, ss.staticEval,
+                                                              -6, False))  # DEPTH_NONE = -6
             return bestValue
         
         if PvNode and bestValue > alpha:
@@ -227,6 +233,13 @@ def qsearch(pos: Position, nodeType: NodeType, ss: Stack,
         
     # Step 5. Moves loop
     for m in pos.board.legal_moves:
+        """Because the depth is <= 0 here, only captures,
+        queen promotions, and other checks (only if depth >= DEPTH_QS_CHECKS)
+        will be generated.
+        """
+        if not (pos.is_capture(m) or m.promotion == chess.QUEEN or pos.gives_check(m)):
+            continue
+            
         givesCheck = pos.gives_check(m)
         capture = pos.board.is_capture(m)
         
@@ -236,9 +249,10 @@ def qsearch(pos: Position, nodeType: NodeType, ss: Stack,
             if futilityValue <= alpha:
                 bestValue = max(bestValue, futilityValue)
                 continue
-            # if futilityBase <= alpha && !pos.see_ge(move, VALUE_ZERO + 1) # TODO
-            #   bestValue = std::max(bestValue, futilityBase);
-            #   continue;
+            if futilityBase <= alpha\
+                and pos.see(m.to_square, us) <= 0:
+                bestValue = max(bestValue, futilityBase)
+                continue
             
         # Do not search moves with bad enough SEE values
         see_value = pos.see(m.to_square, us) if capture else Value.VALUE_ZERO
@@ -281,15 +295,15 @@ def iterative_deepening(rootPos: Position, max_depth: int = MAX_PLY, max_time: i
     
     starttime = time.time()
     if max_time:
-        thread.set_time_limit(max_time / 1000)
+        threads.set_time_limit(max_time / 1000)
         
-    thread.init()
+    threads.init()
 
     for depth in range(1, max_depth + 1):
         global best_move
         best_move = None
         value = search(rootPos, NodeType.Root, Stack(), -Value.VALUE_INFINITE, Value.VALUE_INFINITE, depth, False)
-        if thread.stopped():
+        if threads.stopped():
             break
 
         t = int((time.time() - starttime) * 1000)
