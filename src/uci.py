@@ -44,6 +44,11 @@ def uci():
                 movetime = int(command.split(" ")[2])
             else:
                 movetime = None
+                
+            if command.split(" ").__len__() > 1 and command.split(" ")[1] == "nodes":
+                nodes = int(command.split(" ")[2])
+            else:
+                nodes = None
             
             if command.split(" ").__len__() > 1 and command.split(" ")[1] == "depth":
                 depth = int(command.split(" ")[2])
@@ -56,9 +61,8 @@ def uci():
             
             # we do not support time controls yet.
             # we also do not support pondering.
-            # nodes and mate may be added in the future.
             
-            search.iterative_deepening(pos, depth, movetime)
+            search.iterative_deepening(pos, depth, movetime, nodes)
         
         elif command == "quit":
             break

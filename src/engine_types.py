@@ -3,6 +3,7 @@ from enum import Enum, auto
 import chess
 
 MAX_PLY = 246
+MAX_NODES = 2**64
 TT_SIZE = 2**15
 
 class Value:

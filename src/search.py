@@ -12,6 +12,7 @@ def futility_margin(depth: int):
 
 best_move = None  # root move
 nodes = 0
+nodes_limit = MAX_NODES
 last_pv_timer = time.time()
 
 def search(pos: Position, nodeType: NodeType, ss: Stack,
@@ -19,8 +20,12 @@ def search(pos: Position, nodeType: NodeType, ss: Stack,
            depth: int, cutNode: bool):
     """Main search function. Value returned from side to move."""
     
-    global nodes, last_pv_timer
+    global nodes, nodes_limit, last_pv_timer
     nodes += 1
+    
+    if nodes >= nodes_limit:
+        threads.stop_search()
+        return Value.VALUE_ZERO
     
     PvNode = nodeType == NodeType.PV or nodeType == NodeType.Root
     rootNode = nodeType == NodeType.Root
@@ -325,11 +330,12 @@ def qsearch(pos: Position, nodeType: NodeType, ss: Stack,
         
     return bestValue
     
-def iterative_deepening(rootPos: Position, max_depth: int = MAX_PLY, max_time: int = None):
+def iterative_deepening(rootPos: Position, max_depth: int = MAX_PLY, max_time: int = None, nodeslimit: int = None):
     """Called by UCI command. Starts the search."""
     import time
-    global nodes, TTtable, last_pv_timer
+    global nodes, nodes_limit, TTtable, last_pv_timer
     nodes = 0  # init
+    nodes_limit = nodeslimit if nodeslimit else MAX_NODES
     TTtable = tt.TranspositionTable(TT_SIZE)  # TODO: TT size to be added as UCI option
     
     starttime = time.time()
