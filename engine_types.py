@@ -34,10 +34,27 @@ class Value:
         return Value(-self.value)
     
     def __eq__(self, other):
+        if type(other) == int:
+            return self.value == other
         return self.value == other.value
+    
+    def __lt__(self, other):
+        if type(other) == int:
+            return self.value < other
+        return self.value < other.value
+    
+    def __gt__(self, other):
+        if type(other) == int:
+            return self.value > other
+        return self.value > other.value
+
     def __ge__(self, other):
+        if type(other) == int:
+            return self.value >= other
         return self.value >= other.value
     def __le__(self, other):
+        if type(other) == int:
+            return self.value <= other
         return self.value <= other.value
     
     def __sub__(self, other: int):

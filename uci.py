@@ -1,5 +1,5 @@
 import chess
-import position, search, thread, benchmark
+import position, search, threads, benchmark
 from engine_types import *
 
 def move_to_uci(move: chess.Move):
@@ -66,6 +66,6 @@ def uci():
         elif command == "stop":
             # when this command is issued, we must stop searching immediately
             # and return the best move found so far ("bestmove" output).
-            thread.stop_search()
+            threads.stop_search()
         elif command == "bench":
             benchmark.benchmark()

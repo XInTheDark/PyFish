@@ -4,6 +4,7 @@ import zobrist
 
 class TranspositionTable:
     class TTEntry:
+        # TODO: Add `bound` info.
         def __init__(self, key=None, move: chess.Move=None, value: Value=None, eval: Value=None,
                      depth: int=None, is_pv: bool=None):
             self.key = key
