@@ -163,15 +163,12 @@ def search(pos: Position, nodeType: NodeType, ss: Stack,
     
     # End of for loop
     # TODO: Step 21. Check for mate and stalemate (not needed?)
-    print(bestValue)
     return bestValue
 
 
 def qsearch(pos: Position, nodeType: NodeType, ss: Stack,
             alpha: Value, beta: Value, depth: int):
     """Quiescence search function, called from main search with depth <= 0."""
-    if depth <= -5:
-        return evaluate.evaluate(pos)
     
     global nodes
     nodes += 1
@@ -191,6 +188,12 @@ def qsearch(pos: Position, nodeType: NodeType, ss: Stack,
     if threads.stopped():
         return evaluate.evaluate(pos)
     
+    # Check for checkmate and stalemate
+    if pos.board.is_checkmate():
+        return -(Value.VALUE_MATE + ss.ply)
+    elif pos.board.is_stalemate():
+        return Value.VALUE_DRAW
+    
     # Transposition table lookup
     ttEntry = TTtable.get(pos)
     ttHit = not ttEntry.is_none()
@@ -199,13 +202,14 @@ def qsearch(pos: Position, nodeType: NodeType, ss: Stack,
     pvHit = ttHit and ttEntry.is_pv
     
     # At non-PV nodes we check for an early TT cutoff
-    if not PvNode and ttHit and ttEntry.depth >= depth\
+    if not PvNode and ttHit and ttEntry.depth is not None and ttEntry.depth >= depth\
         and ttValue is not None and ttValue != Value.VALUE_NONE:
         return ttValue
     
     # Step 4. Static evaluation
-    if inCheck:
-        ss.staticEval = eval_ = Value.VALUE_NONE
+    # if inCheck:
+    if False:
+        ss.staticEval = Value.VALUE_NONE
         bestValue = futilityBase = -Value.VALUE_INFINITE
     else:
         if ttHit:
@@ -244,20 +248,21 @@ def qsearch(pos: Position, nodeType: NodeType, ss: Stack,
         capture = pos.board.is_capture(m)
         
         # Step 6. Pruning
-        if not givesCheck and chess.Move.promotion is None and futilityBase >= -Value.VALUE_KNOWN_WIN:
-            futilityValue = futilityBase + piece_value(pos.board.piece_at(m.to_square))
-            if futilityValue <= alpha:
-                bestValue = max(bestValue, futilityValue)
-                continue
-            if futilityBase <= alpha\
-                and pos.see(m.to_square, us) <= 0:
-                bestValue = max(bestValue, futilityBase)
-                continue
+        if bestValue > -31508:  # VALUE_TB_LOSS_IN_MAX_PLY
+            if not givesCheck and chess.Move.promotion is None and futilityBase >= -Value.VALUE_KNOWN_WIN:
+                futilityValue = futilityBase + piece_value(pos.board.piece_at(m.to_square))
+                if futilityValue <= alpha:
+                    bestValue = max(bestValue, futilityValue)
+                    continue
+                if futilityBase <= alpha\
+                    and pos.see(m.to_square, us) <= 0:
+                    bestValue = max(bestValue, futilityBase)
+                    continue
             
-        # Do not search moves with bad enough SEE values
-        see_value = pos.see(m.to_square, us) if capture else Value.VALUE_ZERO
-        if see_value < -110:
-            continue
+            # Do not search moves with bad enough SEE values
+            see_value = pos.see(m.to_square, us) if capture else Value.VALUE_ZERO
+            if see_value < -110:
+                continue
         
         # Make the move
         pos.do_move(m)
@@ -271,21 +276,18 @@ def qsearch(pos: Position, nodeType: NodeType, ss: Stack,
             bestValue = value
             if value > alpha:
                 bestMove = m
-                if value >= beta:
-                    break
+                if PvNode and value < beta:
+                    alpha = value
                 elif PvNode:
                     alpha = value
                     
-        # Step 9. Check for mate
-        if pos.board.is_checkmate() and bestValue == -Value.VALUE_INFINITE:
-            return Value.VALUE_MATE
         
-        # Save gathered info in transposition table
-        TTtable.save(pos, hash_(pos),
-                     TTtable.TTEntry(hash_(pos), bestMove, bestValue, ss.staticEval,
-                                     0, PvNode))  # TODO: change depth to ttDepth
+    # Save gathered info in transposition table
+    TTtable.save(pos, hash_(pos),
+                 TTtable.TTEntry(hash_(pos), bestMove, bestValue, ss.staticEval,
+                                 0, PvNode))  # TODO: change depth to ttDepth
         
-        return bestValue
+    return bestValue
     
 def iterative_deepening(rootPos: Position, max_depth: int = MAX_PLY, max_time: int = None):
     """Called by UCI command. Starts the search."""
