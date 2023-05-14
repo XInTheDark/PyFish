@@ -1,4 +1,3 @@
-from engine_types import *
 from position import *
 import zobrist
 

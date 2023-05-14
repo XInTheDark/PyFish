@@ -1,4 +1,3 @@
-import chess
 import position, search, threads, benchmark
 from engine_types import *
 
