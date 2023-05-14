@@ -12,7 +12,7 @@ import time
 TTtable = None  # initialised in iterative_deepening()
 
 def futility_margin(depth: int):
-    return Value(146 * depth)
+    return 146 * depth
 
 
 best_move = None  # root move
@@ -46,7 +46,7 @@ def search(pos: Position, nodeType: NodeType, ss: Stack,
     bestValue = -Value.VALUE_INFINITE
     maxValue = Value.VALUE_INFINITE
     bestMove = None
-    eval_: Value = None
+    eval_: Value = Value.VALUE_NONE
     
     # Other variables used
     improving: bool = False; improvement = 0
@@ -99,6 +99,9 @@ def search(pos: Position, nodeType: NodeType, ss: Stack,
     currMoveN = 0
     LEGAL_MOVES = list(pos.board.legal_moves)
     for m in LEGAL_MOVES:
+        capture = pos.board.is_capture(m)
+        givesCheck = pos.board.gives_check(m)
+        
         ss.moveCount += 1
         if rootNode: currMoveN += 1
         extension = 0
@@ -112,6 +115,32 @@ def search(pos: Position, nodeType: NodeType, ss: Stack,
         newDepth = depth - 1
         delta: Value = beta - alpha
         
+        r = 2 - (depth > 5)
+        
+        # Step 14. Pruning at shallow depth
+        if not rootNode and pos.non_pawn_material(us) and bestValue > Value.VALUE_TB_LOSS_IN_MAX_PLY:
+            # TODO: moveCountPruning
+            lmrDepth = max(newDepth - r, 0)
+            
+            if capture or givesCheck:
+                # Futility pruning for captures
+                if (not givesCheck) and lmrDepth < 6 and not inCheck\
+                    and ss.staticEval + 212 + 233 * lmrDepth\
+                        + piece_value(pos.board.piece_type_at(m.to_square)) < alpha:
+                    continue
+                    
+                if capture and pos.see(m.to_square, us) < -205 * depth:
+                    continue
+            else:
+                # Futility pruning: parent node
+                if not inCheck and lmrDepth < 13\
+                    and ss.staticEval + 104 + 136 * lmrDepth <= alpha:
+                    continue
+                    
+                # Prune moves with negative SEE
+                if pos.see(m.to_square, us) < -27 * lmrDepth * lmrDepth - 16 * lmrDepth:
+                    continue
+        
         # TODO: Step 15. Extensions
         # if not rootNode and depth >= 6 and m == ttMove and abs(ttValue) < Value.VALUE_KNOWN_WIN\
         #     and ttEntry.depth >= depth - 3:
@@ -122,9 +151,7 @@ def search(pos: Position, nodeType: NodeType, ss: Stack,
         
         # Step 16. Make the move
         pos.do_move(m)
-        
-        r = 0
-        
+
         if cutNode:
             r += 2
             
@@ -262,7 +289,7 @@ def qsearch(pos: Position, nodeType: NodeType, ss: Stack,
         capture = pos.board.is_capture(m)
         
         # Step 6. Pruning
-        if bestValue > -31508:  # VALUE_TB_LOSS_IN_MAX_PLY
+        if bestValue > -Value.VALUE_TB_LOSS_IN_MAX_PLY:
             if not givesCheck and chess.Move.promotion is None and futilityBase >= -Value.VALUE_KNOWN_WIN:
                 futilityValue = futilityBase + piece_value(pos.board.piece_at(m.to_square))
                 if futilityValue <= alpha:
