@@ -165,7 +165,7 @@ def search(pos: Position, nodeType: NodeType, ss: Stack,
         # d = clamp(1, newDepth - r, newDepth + 1)
         d = newDepth
         if PvNode:
-            value = -search(pos, NodeType.PV, ss, -(alpha + 1), -alpha, d, False)
+            value = -search(pos, NodeType.PV, ss, -(alpha+1), -alpha, d, False)
             if alpha < value < beta:
                 value = -search(pos, NodeType.NonPV, ss, -beta, -alpha, d, True)
         else:
@@ -174,9 +174,9 @@ def search(pos: Position, nodeType: NodeType, ss: Stack,
         # Do full depth search when reduced LMR search fails high
         if value > alpha and d < newDepth:
             doDeeperSearch = value > (bestValue + 68 + 12 * (newDepth - d))
-            # doEvenDeeperSearch = value > alpha + 588
+            doEvenDeeperSearch = value > alpha + 588
             doShallowerSearch = value < bestValue + newDepth
-            newDepth += doDeeperSearch - doShallowerSearch
+            newDepth += doDeeperSearch + doEvenDeeperSearch - doShallowerSearch
             
             if newDepth > d:
                 value = -search(pos, NodeType.NonPV, ss, -(alpha+1), -alpha, newDepth, not cutNode)
