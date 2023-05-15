@@ -27,7 +27,10 @@ def uci():
         elif command == "position startpos":
             pos = position.Position()
         elif command.startswith("position startpos moves"):
-            moves = command.split("position startpos moves ")[1].split(" ")
+            try:
+                moves = command.split("position startpos moves ")[1].split(" ")
+            except IndexError:
+                moves = []
             for move in moves:
                 pos.board.push(uci_to_move(move))
         elif command.startswith("position fen") and "moves" in command:
