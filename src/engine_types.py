@@ -7,8 +7,8 @@ MAX_NODES = 2**64
 TT_SIZE = 2**15
 
 class Value:
-    def __init__(self, value: int):
-        self.value = value
+    def __init__(self, value):
+        self.value = int(value)
         
     VALUE_ZERO = 0
     VALUE_DRAW = 0

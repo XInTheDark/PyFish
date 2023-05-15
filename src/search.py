@@ -349,6 +349,8 @@ def iterative_deepening(rootPos: Position, max_depth: int = MAX_PLY, max_time: i
         global best_move
         best_move = None
         value = search(rootPos, NodeType.Root, Stack(), -Value.VALUE_INFINITE, Value.VALUE_INFINITE, depth, False)
+        value = evaluate.to_cp(value)
+        
         if threads.stopped():
             break
 

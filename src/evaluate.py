@@ -25,3 +25,12 @@ def evaluate(pos: Position):
     MATERIAL_PSQT_SCALED = int( (2 - psqt_scale) * MATERIAL_SCORE + psqt_scale * PSQT_SCORE )
     
     return MATERIAL_PSQT_SCALED
+
+
+def to_cp(v: Value) -> int:
+    """Convert a value to centipawns.
+    We use the SF UCI::NormalizeToPawnValue.
+    """
+    if Value.VALUE_TB_WIN_IN_MAX_PLY > v > Value.VALUE_TB_LOSS_IN_MAX_PLY:
+        return int(100 * (v / 394))
+    return int(v)
