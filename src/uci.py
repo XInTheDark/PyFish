@@ -31,13 +31,16 @@ def uci():
             for move in moves:
                 pos.board.push(uci_to_move(move))
         elif command.startswith("position fen") and "moves" in command:
-            fen = command.split(" ")[2]
-            moves = command.split("moves ")[1].split(" ")
+            # remove 'position fen '
+            s = ' '.join(command.split(" ")[2:])
+            fen = position.fen_from_str(s)[0]
+            moves = position.fen_from_str(s)[1].split()[1:]
             pos = position.Position(fen)
             for move in moves:
                 pos.board.push(uci_to_move(move))
         elif command.startswith("position fen"):
-            fen = command.split(" ")[2]
+            s = ' '.join(command.split(" ")[2:])
+            fen = position.fen_from_str(s)[0]
             pos = position.Position(fen)
         elif command.startswith("go"):
             if command.split(" ").__len__() > 1 and command.split(" ")[1] == "movetime":

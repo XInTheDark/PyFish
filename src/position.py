@@ -7,6 +7,9 @@ class Position:
         self.fen = fen
         self.board = chess.Board(fen)
         
+        # # There is a bug where the side to move is not inferred from the FEN, so we set it manually.
+        # self.board.turn = chess.WHITE if fen.split(" ")[1] == 'w' else chess.BLACK
+        
     def count(self, PieceType: chess.PieceType):
         return len(self.board.pieces(PieceType, chess.WHITE))\
             + len(self.board.pieces(PieceType, chess.BLACK))
@@ -96,4 +99,18 @@ class Position:
         return self.non_pawn_material(eg=True) < Value.EndgameLimit \
             or self.count_all() - self.count(chess.PAWN) <= 5
     
+def fen_from_str(s: str):
+    """Parse the FEN from a string.
+    For example, input: '3R4/r7/3k2P1/3p4/2pP4/1b2PK1N/5P2/8 b - - 3 48 moves d6g7',
+    output: ['3R4/r7/3k2P1/3p4/2pP4/1b2PK1N/5P2/8 b - - 3 48', 'moves d6g7']
+    where the first element in the list is the FEN and the remaining is the rest of the string.
+    """
     
+    l = s.split(" ")
+    if len(l) < 6:
+        raise ValueError("Invalid FEN")
+    
+    fen = " ".join(l[:6])
+    rest = " ".join(l[6:])
+    
+    return [fen, rest]

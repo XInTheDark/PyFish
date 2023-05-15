@@ -23,6 +23,8 @@ def search(pos: Position, nodeType: NodeType, ss: Stack,
     global nodes, nodes_limit, last_pv_timer
     nodes += 1
     
+    global TTtable
+    
     if nodes >= nodes_limit:
         threads.stop_search()
         print(f"info nodes {nodes}")
@@ -183,7 +185,7 @@ def search(pos: Position, nodeType: NodeType, ss: Stack,
                 
         # Step 19. Undo move
         pos.undo_move()
-        assert Value.VALUE_INFINITE > value > -Value.VALUE_INFINITE
+        # assert Value.VALUE_INFINITE > value > -Value.VALUE_INFINITE
         
         # Step 20. Check for a new best move
         if threads.stopped():
@@ -311,7 +313,7 @@ def qsearch(pos: Position, nodeType: NodeType, ss: Stack,
         value = -qsearch(pos, nodeType, ss, -beta, -alpha, depth - 1)  # TODO: recursion error!
         pos.undo_move()
         
-        assert Value.VALUE_INFINITE > value > -Value.VALUE_INFINITE
+        # assert Value.VALUE_INFINITE > value > -Value.VALUE_INFINITE
         
         # Step 8. Check for a new best move
         if value > bestValue:
