@@ -1,3 +1,6 @@
+# Delete current pyfish executable
+rm ../pyfish
+
 pyinstaller main.py --onefile -n pyfish
 
 # Path: src/dist/pyfish
