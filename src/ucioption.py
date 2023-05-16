@@ -104,7 +104,7 @@ class Option:
 
 # UCI Options
 options = {
-    "Hash": Option.Spin("Hash", 2**15, 1, 2**20)  # TT size, i.e. number of entries
+    "Hash": Option.Spin("Hash", 2**15, 1, 2**25)  # TT size, i.e. number of entries
 }
 
 def setoption(name: str, value: str=None):
