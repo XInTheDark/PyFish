@@ -1,5 +1,6 @@
 import position, search, threads, benchmark
 from engine_types import *
+from ucioption import *
 
 def move_to_uci(move: chess.Move):
     """Convert a chess.Move object to a UCI string."""
@@ -18,7 +19,9 @@ def uci():
         command = input()
         if command == "uci":
             print(f"id name PyFish")
-            print(f"id author Muzhen Gaming")
+            print(f"id author the PyFish developers (see AUTHORS file)\n")
+            # UCI options
+            print(options_str())
             print("uciok")
         elif command == "isready":
             print("readyok")
@@ -78,3 +81,20 @@ def uci():
             threads.stop_search()
         elif command == "bench":
             benchmark.benchmark()
+            
+        # option setting
+        elif command.startswith("setoption"):
+            # FORMAT: name <id> value <x>
+            c = command.split()
+            if not c[1] == "name":
+                continue
+            try:
+                value_index = c.index("value")
+            except ValueError:
+                # Type = button
+                value_index = c.__len__()
+            name = " ".join(c[2:value_index])
+            value = " ".join(c[value_index+1:])
+            
+            # set the option
+            setoption(name, value)

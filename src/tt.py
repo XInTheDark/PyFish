@@ -36,7 +36,7 @@ class TranspositionTable:
         self.table[posKey] = entry
     
     def clear(self):
-        self.table = [None for i in range(self.size)]
+        self.table = [self.TTEntry() for i in range(self.size)]
     
     def __str__(self):
         return str(self.table)

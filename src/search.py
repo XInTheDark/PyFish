@@ -1,6 +1,7 @@
 from search_h import *
 import tt
 import evaluate
+from ucioption import *
 import threads
 import time
 
@@ -339,7 +340,7 @@ def iterative_deepening(rootPos: Position, max_depth: int = MAX_PLY, max_time: i
     global nodes, nodes_limit, TTtable, last_pv_timer
     nodes = 0  # init
     nodes_limit = nodeslimit if nodeslimit else MAX_NODES
-    TTtable = tt.TranspositionTable(TT_SIZE)  # TODO: TT size to be added as UCI option
+    TTtable = tt.TranspositionTable(option("Hash"))
     
     starttime = time.time()
     if max_time:

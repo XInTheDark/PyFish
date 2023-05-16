@@ -1,6 +1,7 @@
 from engine_types import *
 from position import *
 import random
+from ucioption import *
 
 class Zobrist:
     def __init__(self):
@@ -25,5 +26,5 @@ class Zobrist:
         for i in range(16):
             if position.board.has_castling_rights(i):
                 h ^= self.castling[i]
-        return h % TT_SIZE
+        return h % option("Hash")
     
