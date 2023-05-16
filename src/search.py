@@ -5,7 +5,7 @@ from ucioption import *
 import threads
 import time
 
-TTtable = None  # initialised in iterative_deepening()
+TTtable = tt.TranspositionTable(option("Hash"))
 
 def futility_margin(depth: int):
     return 146 * depth
@@ -340,7 +340,7 @@ def iterative_deepening(rootPos: Position, max_depth: int = MAX_PLY, max_time: i
     global nodes, nodes_limit, TTtable, last_pv_timer
     nodes = 0  # init
     nodes_limit = nodeslimit if nodeslimit else MAX_NODES
-    TTtable = tt.TranspositionTable(option("Hash"))
+    TTtable.clear()
     
     starttime = time.time()
     if max_time:
@@ -356,6 +356,11 @@ def iterative_deepening(rootPos: Position, max_depth: int = MAX_PLY, max_time: i
         
         if threads.stopped():
             break
+            
+        if threads.CLEAR_HASH:
+            TTtable.clear()
+            print("info string Hash cleared")
+            threads.CLEAR_HASH = False
 
         t = int((time.time() - starttime) * 1000)
 

@@ -1,6 +1,7 @@
 from engine_types import *
 from position import *
 import uci
+import threads
 
 class Option:
     """Types:
@@ -103,8 +104,12 @@ class Option:
 
 
 # UCI Options
+def on_clear_hash():
+    threads.clear_hash()
+
 options = {
-    "Hash": Option.Spin("Hash", 2**15, 1, 2**25)  # TT size, i.e. number of entries
+    "Hash": Option.Spin("Hash", 2**15, 1, 2**25),  # TT size, i.e. number of entries
+    "Clear Hash": Option.Button("Clear Hash", on_clear_hash),
 }
 
 def setoption(name: str, value: str=None):
