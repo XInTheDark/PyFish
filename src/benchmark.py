@@ -1,0 +1,2 @@
+def bench(depth):
+    pass
